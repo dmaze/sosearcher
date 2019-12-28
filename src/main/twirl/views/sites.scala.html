@@ -1,0 +1,19 @@
+@import org.dmaze.sosearcher.models._
+@(sites: Seq[Site])
+
+@main("Stack Exchange Sites") {
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>Stack Exchange Sites</h1>
+                <ul>
+                    @for(site <- sites) {
+                        <li>
+                            <img src="@site.logoUrl"><b>@site.name</b> @site.audience
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    }
