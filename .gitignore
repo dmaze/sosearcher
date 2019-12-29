@@ -6,5 +6,6 @@ target
 /.classpath
 /.project
 /.settings
+/data
 /RUNNING_PID
 /sosearcher.sqlite
