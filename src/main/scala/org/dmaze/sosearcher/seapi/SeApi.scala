@@ -1,4 +1,4 @@
-package org.dmaze.sosearcher.models
+package org.dmaze.sosearcher.seapi
 
 /** Metadata about the Stack Exchange API. */
 trait SeApi {

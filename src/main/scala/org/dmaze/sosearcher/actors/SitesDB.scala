@@ -3,7 +3,8 @@ package org.dmaze.sosearcher.actors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import com.google.inject.Provides
-import org.dmaze.sosearcher.db.{Site => DBSite}
+import org.dmaze.sosearcher.seapi.{Site => APISite}
+import org.dmaze.sosearcher.db.{Site => DBSite, Sites}
 import org.dmaze.sosearcher.models.Site
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.concurrent.ActorModule
@@ -33,19 +34,19 @@ object SitesDB extends ActorModule {
   final case class Retrieve(replyTo: ActorRef[Reply]) extends Command
 
   /** Command to replace the current list of sites. */
-  final case class Replace(sites: Seq[Site], replyTo: ActorRef[Reply])
+  final case class Replace(sites: Seq[APISite], replyTo: ActorRef[Reply])
       extends Command
 
   /** Command indicating the query part of [[Retrieve]] has completed. */
   private final case class Retrieved(
-      sites: Try[Seq[Site]],
+      sites: Try[Seq[DBSite]],
       replyTo: ActorRef[Reply]
   ) extends Command
 
   /** Command indicating the query part of [[Replace]] has completed. */
   private final case class ReplaceMerge(
       ids: Seq[(String, Int)],
-      sites: Seq[Site],
+      sites: Seq[APISite],
       replyTo: ActorRef[Reply]
   ) extends Command
 
@@ -62,13 +63,13 @@ object SitesDB extends ActorModule {
     Behaviors.receive { (context, command) =>
       command match {
         case Retrieve(replyTo) => {
-          val action = TableQuery[DBSite].filter(_.active).result
+          val action = TableQuery[Sites].filter(_.active).result
           val future = db.run(action)
           context.pipeToSelf(future) { case t => Retrieved(t, replyTo) }
           Behaviors.same
         }
         case Retrieved(tSites, replyTo) => {
-          replyTo ! Reply(tSites)
+          replyTo ! Reply(tSites.map { _.map { _.toModel } })
           Behaviors.same
         }
         case Replace(sites, replyTo) => {
@@ -85,7 +86,7 @@ object SitesDB extends ActorModule {
           // won't be awful.
           //
           // Step one is to get a dump of the current site IDs.
-          val action = TableQuery[DBSite].map { r =>
+          val action = TableQuery[Sites].map { r =>
             (r.apiSiteParameter, r.id)
           }.result
           val future = db.run(action)
@@ -100,14 +101,16 @@ object SitesDB extends ActorModule {
           val idMap = Map.from(ids)
           // Update the "sites" list to have the matching IDs
           val newSites = sites.map { s =>
-            s.copy(
-              databaseId = idMap.get(s.apiSiteParameter)
+            DBSite(
+              databaseId = idMap.get(s.attributes.apiSiteParameter),
+              attributes = s.attributes,
+              active = true
             )
           }
           // In the database, mark everything as inactive, then
           // upsert the new list of sites
-          val deactivate = TableQuery[DBSite].map { _.active }.update(false)
-          val upserts = newSites.map { TableQuery[DBSite].insertOrUpdate(_) }
+          val deactivate = TableQuery[Sites].map { _.active }.update(false)
+          val upserts = newSites.map { TableQuery[Sites].insertOrUpdate(_) }
           val action = DBIO.seq(deactivate +: upserts: _*)
           val future = db.run(action)
           context.pipeToSelf(future) {

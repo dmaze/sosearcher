@@ -1,8 +1,8 @@
-package org.dmaze.sosearcher.models
+package org.dmaze.sosearcher.seapi
 
 /**
   * Generic API-level exception from the SE API.
-  * 
+  *
   * This will occur if the HTTP request executed successfully, but
   * the [[ApiWrapper]] included error metadata.
   */

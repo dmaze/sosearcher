@@ -4,7 +4,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import com.google.inject.Provides
 import java.util.concurrent.TimeUnit.SECONDS
-import org.dmaze.sosearcher.models.{ApiWrapper, Site}
+import org.dmaze.sosearcher.seapi.{ApiWrapper, Site}
 import play.api.libs.concurrent.ActorModule
 import play.api.libs.ws.{WSClient, WSResponse}
 import scala.concurrent.duration.FiniteDuration
@@ -12,7 +12,7 @@ import scala.util.Try
 
 /**
   * Actor to interact with the SE "sites" API.
-  * 
+  *
   * This can request the list of sites and return it.  This changes
   * very infrequently (at most once per day) and the API documentation
   * notes that it should be called sparingly.  You generally would
@@ -20,13 +20,17 @@ import scala.util.Try
   * the site response.
   */
 object SitesAPI extends ActorModule {
+
   /** A command that can be sent to this actor. */
   sealed trait Command
   type Message = Command
+
   /** Command to request the list of sites. */
   final case class Request(replyTo: ActorRef[Reply]) extends Command
+
   /** Trigger handling when the SE API returns a list of sites. */
   private final case class Respond(response: Try[WSResponse]) extends Command
+
   /** Trigger forward processing when a back-off has completed. */
   private final case class BackedOff() extends Command
 
@@ -65,10 +69,13 @@ object SitesAPI extends ActorModule {
 
   /**
     * State behavior for the initial (idle) state.
-    * 
+    *
     * Transition to [[inFlight]] when a [[Request]] is received.
     */
-  private def idle(ws: WSClient, timers: TimerScheduler[Command]): Behavior[Command] = {
+  private def idle(
+      ws: WSClient,
+      timers: TimerScheduler[Command]
+  ): Behavior[Command] = {
     Behaviors.receive { (context, command) =>
       command match {
         case Request(replyTo) =>
@@ -83,10 +90,10 @@ object SitesAPI extends ActorModule {
 
   /** Helper to transition to the {inFlight} state. */
   private def makeRequest(
-    context: ActorContext[Command],
-    ws: WSClient,
-    timers: TimerScheduler[Command],
-    replies: Seq[ActorRef[Reply]]
+      context: ActorContext[Command],
+      ws: WSClient,
+      timers: TimerScheduler[Command],
+      replies: Seq[ActorRef[Reply]]
   ): Behavior[Command] = {
     val future = ws
       .url(Site.url)
@@ -99,13 +106,17 @@ object SitesAPI extends ActorModule {
 
   /**
     * State behavior for the in-flight state.
-    * 
+    *
     * Transition to this state from {idle} when at least one
     * {Request} has been received.  Stay in this state until a
     * response arrives, then transition to either {idle} or {backOff}
     * depending on whether a backoff was requested.
     */
-  private def inFlight(ws: WSClient, timers: TimerScheduler[Command], replies: Seq[ActorRef[Reply]]): Behavior[Command] = {
+  private def inFlight(
+      ws: WSClient,
+      timers: TimerScheduler[Command],
+      replies: Seq[ActorRef[Reply]]
+  ): Behavior[Command] = {
     Behaviors.receive { (context, command) =>
       command match {
         case Request(replyTo) =>
@@ -119,7 +130,11 @@ object SitesAPI extends ActorModule {
           if (backoff == 0) {
             idle(ws, timers)
           } else {
-            timers.startSingleTimer(TimerKey, BackedOff(), FiniteDuration(backoff, SECONDS))
+            timers.startSingleTimer(
+              TimerKey,
+              BackedOff(),
+              FiniteDuration(backoff, SECONDS)
+            )
             backOff(ws, timers, Seq())
           }
         }
@@ -132,18 +147,22 @@ object SitesAPI extends ActorModule {
 
   /**
     * State behavior for the backoff state.
-    * 
+    *
     * Transition to this state from [[inFlight]] when the API
     * response included a backoff time.  That handler is also
     * responsible for setting a timeout.  If we receive any Request
     * commands in this state, them up and do not launch a request.
-    * 
+    *
     * When we receive a BackedOff command, the timer has gone
     * off.  If there are no outstanding requests, return to [[idle]]
     * state; otherwise launch a single network request and go to
     * [[inFlight]].
     */
-  private def backOff(ws: WSClient, timers: TimerScheduler[Command], replies: Seq[ActorRef[Reply]]): Behavior[Command] = {
+  private def backOff(
+      ws: WSClient,
+      timers: TimerScheduler[Command],
+      replies: Seq[ActorRef[Reply]]
+  ): Behavior[Command] = {
     Behaviors.receive { (context, command) =>
       command match {
         case Request(replyTo) =>
