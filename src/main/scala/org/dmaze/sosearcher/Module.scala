@@ -4,7 +4,12 @@ import com.google.inject.{AbstractModule, Provider, Provides}
 import io.kontainers.micrometer.akka.AkkaMetricRegistry
 import io.micrometer.core.instrument.{Clock, MeterRegistry}
 import io.micrometer.core.instrument.binder.MeterBinder
-import io.micrometer.core.instrument.binder.jvm.{ClassLoaderMetrics, JvmGcMetrics, JvmMemoryMetrics, JvmThreadMetrics}
+import io.micrometer.core.instrument.binder.jvm.{
+  ClassLoaderMetrics,
+  JvmGcMetrics,
+  JvmMemoryMetrics,
+  JvmThreadMetrics
+}
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry
 import io.micrometer.jmx.{JmxConfig, JmxMeterRegistry}
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
@@ -14,12 +19,14 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
   * Core Guice module for system-level setup.
-  * 
+  *
   * This in particular provides a Micrometer metrics registry.
   */
 class Module extends AbstractModule with ScalaModule {
   override def configure() = {
-    bind[MeterRegistry].toProvider[Module.MeterRegistryProvider].asEagerSingleton
+    bind[MeterRegistry]
+      .toProvider[Module.MeterRegistryProvider]
+      .asEagerSingleton
 
     val registries = ScalaMultibinder.newSetBinder[MeterRegistry](binder)
     registries.addBinding.to[JmxMeterRegistry]
@@ -39,18 +46,24 @@ class Module extends AbstractModule with ScalaModule {
   @Provides @Singleton def provideJmxMeterRegistry: JmxMeterRegistry =
     new JmxMeterRegistry(JmxConfig.DEFAULT, Clock.SYSTEM)
 
-  @Provides @Singleton def providePrometheusMeterRegistry: PrometheusMeterRegistry =
+  @Provides @Singleton def providePrometheusMeterRegistry
+      : PrometheusMeterRegistry =
     new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 }
 
 object Module {
-  @Singleton class MeterRegistryProvider @Inject() (registries: Set[MeterRegistry], binders: Set[MeterBinder]) extends Provider[MeterRegistry] {
+  @Singleton class MeterRegistryProvider @Inject() (
+      registries: Set[MeterRegistry],
+      binders: Set[MeterBinder]
+  ) extends Provider[MeterRegistry] {
     override def get: MeterRegistry = {
       val registry = new CompositeMeterRegistry
       registries.foreach { registry.add(_) }
       binders.foreach { _.bindTo(registry) }
       AkkaMetricRegistry.setRegistry(registry)
-      System.out.println(s"MeterRegistryProvider: ${registries.size} registries, ${binders.size} binders")
+      System.out.println(
+        s"MeterRegistryProvider: ${registries.size} registries, ${binders.size} binders"
+      )
       registry
     }
   }

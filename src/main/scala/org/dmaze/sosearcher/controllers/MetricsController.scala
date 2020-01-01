@@ -7,10 +7,13 @@ import play.api.mvc._
 
 /**
   * Play controller to present Prometheus metrics.
-  * 
+  *
   * Set a route on `/metrics` to this controller.
   */
 @Singleton
-class MetricsController @Inject() (val controllerComponents: ControllerComponents, val registry: PrometheusMeterRegistry) extends BaseController {
+class MetricsController @Inject() (
+    val controllerComponents: ControllerComponents,
+    val registry: PrometheusMeterRegistry
+) extends BaseController {
   def index = Action { Ok(registry.scrape()) }
 }
