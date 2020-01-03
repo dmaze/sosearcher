@@ -1,0 +1,15 @@
+@*
+ * Generic Bootstrap HTML page frame.
+ *@
+@(pageKey: String)(content: Html)(implicit messages: MessagesProvider)
+
+@main(messages.messages(pageKey + ".title")) {
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>@messages.messages(pageKey + ".header")</h1>
+                @content
+            </div>
+        </div>
+    </div>
+}

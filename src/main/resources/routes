@@ -6,6 +6,8 @@
 # An example controller showing a sample home page
 GET     /                           org.dmaze.sosearcher.controllers.HomeController.index
 GET     /metrics                    org.dmaze.sosearcher.controllers.MetricsController.index
+GET     /questions                  org.dmaze.sosearcher.controllers.QuestionsController.index
+POST    /questions                  org.dmaze.sosearcher.controllers.QuestionsController.submit
 GET     /sites                      org.dmaze.sosearcher.controllers.SitesController.index
 
 # Map static resources from the /public folder to the /assets URL path

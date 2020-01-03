@@ -1,0 +1,12 @@
+ui.submit=Submit
+
+page.sites.title=Stack Exchange Sites
+page.sites.header=Stack Exchange Sites
+page.sites.forLine=For {0}
+
+form.question.title=Question URL
+form.question.header=Look up a question
+form.question.url.label=URL
+form.question.url.help=Enter the URL of any question from Stack Overflow or another Stack Exchange site.
+form.question.url.invalid=invalid URL
+form.question.url.valid={0} question {1} (actually valid)

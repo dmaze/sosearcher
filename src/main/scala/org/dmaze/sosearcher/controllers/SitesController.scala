@@ -6,6 +6,7 @@ import akka.util.Timeout
 import javax.inject._
 import org.dmaze.sosearcher.actors.{Sites => SitesActor}
 import play.api._
+import play.api.i18n._
 import play.api.mvc._
 import scala.concurrent.duration._
 import scala.concurrent._
@@ -19,7 +20,8 @@ class SitesController @Inject() (
     val sitesActor: ActorRef[SitesActor.Command],
     implicit val scheduler: Scheduler,
     implicit val ec: ExecutionContext
-) extends BaseController {
+) extends BaseController
+    with I18nSupport {
   implicit val timeout = Timeout(5.seconds)
   def index() = Action.async { implicit request: Request[AnyContent] =>
     sitesActor
@@ -27,7 +29,7 @@ class SitesController @Inject() (
       .map { case SitesActor.Reply(siteSeq) => siteSeq }
       .flatMap { Future.fromTry(_) }
       .map { sites =>
-        Ok(views.html.sites(sites))
+        Ok(views.html.sites(sites.sites))
       }
   }
 }

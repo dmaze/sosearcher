@@ -1,19 +1,13 @@
 @import org.dmaze.sosearcher.models._
-@(sites: Seq[Site])
+@(sites: Seq[Site])(implicit messages: MessagesProvider)
 
-@main("Stack Exchange Sites") {
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <h1>Stack Exchange Sites</h1>
-                <ul>
-                    @for(site <- sites) {
-                        <li>
-                            <img src="@site.logoUrl"><b>@site.name</b> @site.audience
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </div>
-    }
+@frame("page.sites") {
+    <ul class="list-group">
+        @for(site <- sites) {
+            <li class="list-group-item">
+                <h5><img src="@site.iconUrl" style="height: 2.5ex">@site.name</h5>
+                <p><small><tt>@site.siteUrl</tt>: @messages.messages("page.sites.forLine", site.audience)</small></p>
+            </li>
+            }
+    </ul>
+}

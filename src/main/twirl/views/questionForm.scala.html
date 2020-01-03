@@ -1,0 +1,10 @@
+@import org.dmaze.sosearcher.controllers.QuestionUrlData
+@(form: Form[QuestionUrlData])(implicit request: RequestHeader, messages: MessagesProvider)
+
+@frame("form.question") {
+    @helper.form(action = org.dmaze.sosearcher.controllers.routes.QuestionsController.submit) {
+        @helper.CSRF.formField
+        @bsInputText("form.question.url", form("url"))
+        @bsSubmit()
+    }
+}

@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
 import com.google.inject.Provides
 import java.util.concurrent.TimeUnit.SECONDS
-import org.dmaze.sosearcher.models.Site
+import org.dmaze.sosearcher.models.{Site, SiteList}
 import org.dmaze.sosearcher.seapi.{Site => APISite}
 import play.api.Logging
 import play.api.libs.concurrent.ActorModule
@@ -49,7 +49,7 @@ object Sites extends ActorModule with Logging {
       extends Command
 
   /** Reply from [[GetSites]] with the list of sites. */
-  final case class Reply(sites: Try[Seq[Site]])
+  final case class Reply(sites: Try[SiteList])
 
   implicit val timeout = new Timeout(5, SECONDS)
 
@@ -108,7 +108,7 @@ object Sites extends ActorModule with Logging {
 
         def finish(sites: Seq[Site]): Behavior[Command] = {
           logger.info(s"Have ${sites.length} sites")
-          val reply = Reply(Success(sites))
+          val reply = Reply(Success(new SiteList(sites)))
           replies.foreach { _ ! reply }
           steadyState(sitesAPI, sitesDB, sites)
         }
@@ -162,7 +162,7 @@ object Sites extends ActorModule with Logging {
     Behaviors.receive { (context, command) =>
       command match {
         case GetSites(replyTo) => {
-          replyTo ! Reply(Success(sites))
+          replyTo ! Reply(Success(new SiteList(sites)))
           Behaviors.same
         }
         case _ => Behaviors.unhandled

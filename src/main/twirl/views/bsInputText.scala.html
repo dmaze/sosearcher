@@ -1,0 +1,17 @@
+@*
+ * Helper to produce a Bootstrap text input.
+ *
+ * Call this with two parameters, the i18n key for the form and the id
+ * of the input element proper.  This looks for i18n messages key.label
+ * and key.help for the label of the field and help text, respectively.
+ *@
+@(key: String, field: Field)(implicit messages: MessagesProvider)
+
+<div class="form-group">
+    <label for="@field.id">@messages.messages(key + ".label")</label>
+    <input type="text" id="@field.id" name="@field.id" class="form-control" aria-describedby="@(field.id)-help">
+    @for(err <- field.errors) {
+        <small class="form-text text-danger">@messages.messages(err.messages.last, err.args: _*)</small>
+    }
+    <small id="@(field.id)-help" class="form-text text-muted">@messages.messages(key + ".help")</small>
+</div>
