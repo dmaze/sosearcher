@@ -26,7 +26,7 @@ class SiteList(val sites: Seq[Site]) {
     * On success returns a pair of the matching site object and
     * question ID.
     */
-  def questionUrl(url: String): Option[(Site, Int)] = {
+  def questionUrl(url: String): Option[(Site, Long)] = {
     // Implicitly assume all of the URLs are of the form
     // https://stackoverflow.com with no URL path component at are.
     // (Currently that seems to be the case.)
@@ -48,7 +48,7 @@ class SiteList(val sites: Seq[Site]) {
       // Get the question ID
       re = raw"/questions/(\d+)(/.*)?".r
       matched <- re.findFirstMatchIn(path)
-      number <- matched.group(1).toIntOption
+      number <- matched.group(1).toLongOption
     } yield (site, number)
   }
 }

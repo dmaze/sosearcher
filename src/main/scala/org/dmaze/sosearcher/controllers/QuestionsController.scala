@@ -55,12 +55,15 @@ class QuestionsController @Inject() (
               BadRequest(views.html.questionForm(formWithErrors))
             },
             urlData => {
-              // We shouldn't get here right now.
-              Redirect(routes.QuestionsController.index)
+              Redirect(routes.QuestionsController.show(urlData.url.site.apiSiteParameter, urlData.url.number))
             }
           )
         }
       }
+  }
+
+  def show(site: String, id: Long) = Action { implicit request =>
+    Ok(s"${site} ${id}")
   }
 }
 
@@ -68,7 +71,7 @@ class QuestionsController @Inject() (
 case class QuestionUrlData(url: QuestionUrl)
 
 /** A parsed question URL. */
-case class QuestionUrl(site: Site, number: Int)
+case class QuestionUrl(site: Site, number: Long)
 
 class QuestionUrlFormatter(sites: SiteList) extends Formatter[QuestionUrl] {
   // override val format = ???
@@ -77,18 +80,6 @@ class QuestionUrlFormatter(sites: SiteList) extends Formatter[QuestionUrl] {
       .questionUrl(data.get(key).getOrElse(""))
       .map((QuestionUrl.apply _).tupled)
       .toRight(Seq(FormError(key, "form.question.url.invalid")))
-      .flatMap(
-        q =>
-          Left(
-            Seq(
-              FormError(
-                key,
-                "form.question.url.valid",
-                Seq(q.site.name, q.number)
-              )
-            )
-          )
-      ) // this last line is temporary
   override def unbind(key: String, value: QuestionUrl) =
     Map(key -> s"${value.site.siteUrl}/questions/${value.number}")
 }

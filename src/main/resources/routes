@@ -8,6 +8,7 @@ GET     /                           org.dmaze.sosearcher.controllers.HomeControl
 GET     /metrics                    org.dmaze.sosearcher.controllers.MetricsController.index
 GET     /questions                  org.dmaze.sosearcher.controllers.QuestionsController.index
 POST    /questions                  org.dmaze.sosearcher.controllers.QuestionsController.submit
+GET     /questions/:site/:id        org.dmaze.sosearcher.controllers.QuestionsController.show(site: String, id: Long)
 GET     /sites                      org.dmaze.sosearcher.controllers.SitesController.index
 
 # Map static resources from the /public folder to the /assets URL path

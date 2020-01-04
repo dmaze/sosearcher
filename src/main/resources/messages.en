@@ -9,4 +9,3 @@ form.question.header=Look up a question
 form.question.url.label=URL
 form.question.url.help=Enter the URL of any question from Stack Overflow or another Stack Exchange site.
 form.question.url.invalid=invalid URL
-form.question.url.valid={0} question {1} (actually valid)
