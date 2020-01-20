@@ -17,3 +17,7 @@ class Sites(tag: Tag) extends Table[Site](tag, "sites") {
   def * =
     (id.?, name, siteUrl, apiSiteParameter, audience, iconUrl, logoUrl, active) <> ((Site.fromRow _).tupled, Site.toRow)
 }
+
+object Sites {
+  val query = TableQuery[Sites]
+}

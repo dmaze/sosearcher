@@ -1,11 +1,14 @@
 logs
 target
+/.bloop
 /.g8
 /.idea
 /.idea_modules
 /.classpath
+/.metals
 /.project
 /.settings
 /data
 /RUNNING_PID
+/project/.bloop
 /sosearcher.sqlite

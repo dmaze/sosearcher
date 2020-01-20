@@ -4,7 +4,11 @@ import akka.actor.typed.{ActorRef, Scheduler}
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 import javax.inject._
-import org.dmaze.sosearcher.actors.{Sites => SitesActor}
+import org.dmaze.sosearcher.actors.{
+  Fetch => FetchActor,
+  Sites => SitesActor,
+  UserPriority
+}
 import org.dmaze.sosearcher.models.{Site, SiteList}
 import play.api._
 import play.api.data._
@@ -22,6 +26,7 @@ import scala.concurrent._
 @Singleton
 class QuestionsController @Inject() (
     val controllerComponents: ControllerComponents,
+    val fetchActor: ActorRef[FetchActor.Command],
     val sitesActor: ActorRef[SitesActor.Command],
     implicit val scheduler: Scheduler,
     implicit val ec: ExecutionContext
@@ -47,15 +52,33 @@ class QuestionsController @Inject() (
       .ask(SitesActor.GetSites)
       .map { case SitesActor.Reply(sites) => sites }
       .flatMap { Future.fromTry(_) }
-      .map { sites =>
+      .flatMap { sites =>
         {
           implicit val formatter = new QuestionUrlFormatter(sites)
           urlForm.bindFromRequest.fold(
             formWithErrors => {
-              BadRequest(views.html.questionForm(formWithErrors))
+              Future
+                .successful(BadRequest(views.html.questionForm(formWithErrors)))
             },
             urlData => {
-              Redirect(routes.QuestionsController.show(urlData.url.site.apiSiteParameter, urlData.url.number))
+              fetchActor
+                .ask(
+                  (replyTo: ActorRef[FetchActor.QuestionReply]) =>
+                    FetchActor.Question(
+                      urlData.url.site,
+                      urlData.url.number,
+                      UserPriority,
+                      Some(replyTo)
+                    )
+                )
+                .map { case FetchActor.QuestionReply(t) => t }
+                .flatMap { Future.fromTry(_) }
+                .map { case (s, n) =>
+                  Redirect(
+                    routes.QuestionsController
+                      .show(s.apiSiteParameter, n)
+                  )
+                }
             }
           )
         }

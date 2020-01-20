@@ -15,6 +15,8 @@ import play.api.libs.concurrent.AkkaGuiceSupport
   */
 class Module extends AbstractModule with AkkaGuiceSupport {
   override def configure() = {
+    bindTypedActor(Fetch, "fetch-actor")
+    bindTypedActor(FetchDB, "fetch-db-actor")
     bindTypedActor(Sites, "sites-actor")
     bindTypedActor(SitesAPI, "sites-api-actor")
     bindTypedActor(SitesDB, "sites-db-actor")
