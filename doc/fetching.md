@@ -25,9 +25,12 @@ The database layout needs to support a couple of states.  Roughly this is:
 **Fetch Request**: Site ID, post type (`QUESTION`), object number,
 fetch type (`METADATA`, `BODY`), timestamp, result
 
-**Question**: Site ID, question number, closed date, closed reason,
-creation date, link, locked date, owner ID, protected date, score,
-title
+**Question**: Site ID, question number, closed date, closed
+description, closed reason, creation date, last activity date, link,
+locked date, owner ID, protected date, score, title
+
+**Duplicates**: Original question ID, duplicate question ID (not a
+foregn key)
 
 **Tag**: Question ID, tag
 
